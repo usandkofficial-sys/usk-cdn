@@ -120,6 +120,23 @@ textarea.in{min-height:78px;resize:vertical;line-height:1.6}
 .sw.on{background:var(--ok)}
 .sw.on:after{left:22px}
 .lnk{background:none;border:none;padding:0;color:var(--blue-d);font-weight:700;text-decoration:underline;cursor:pointer;font-size:inherit;font-family:inherit}
+/* 접어 둔 카드 제목 — 평소엔 안 보이고 필요할 때만 펼친다 */
+.csum{padding:15px 16px;cursor:pointer;font-size:14.5px;font-weight:700;color:var(--navy);list-style:none;display:flex;align-items:center;gap:8px}
+.csum::-webkit-details-marker{display:none}
+.csum:after{content:'＋';margin-left:auto;font-size:15px;color:var(--mute);font-weight:600}
+details[open] .csum:after{content:'－'}
+.csum .cnote{font-size:11.5px;color:var(--mute);font-weight:500;margin-left:0}
+/* 사진 판독 결과 */
+.read{border:1px solid var(--line);border-radius:12px;padding:13px 14px;background:#FBFAF6}
+.read.on{border-color:#C9E7D8;background:#F3FAF6}
+.read.err{border-color:#F0DCC2;background:#FDF7EF}
+.read b{display:block;font-size:13.5px;color:var(--navy);letter-spacing:-.2px;margin-bottom:5px}
+.read p{margin:0;font-size:13px;line-height:1.7;color:var(--ink2)}
+.read .lvs{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+.read .lvs span{font-size:11.5px;font-weight:700;background:#fff;border:1px solid var(--line);border-radius:7px;padding:3px 8px;color:var(--ink2)}
+.read .est{display:inline-block;font-size:10.5px;font-weight:700;color:var(--gold-d);background:#FAF3E4;border-radius:6px;padding:2px 7px;margin-left:6px;vertical-align:1px}
+.spin{display:inline-block;width:13px;height:13px;border:2px solid var(--line);border-top-color:var(--blue);border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px;margin-right:6px}
+@keyframes sp{to{transform:rotate(360deg)}}
 .chip.risk.on{background:var(--alert);border-color:var(--alert);color:#fff}
 .gl{font-size:11.5px;font-weight:700;color:var(--gold-d);letter-spacing:.3px;margin:14px 0 7px;display:flex;align-items:center;gap:6px}
 .gl:before{content:"";width:3px;height:11px;background:var(--gold);border-radius:2px}
@@ -402,9 +419,8 @@ table.size td em{font-style:normal;font-size:10.5px;color:var(--mute);font-weigh
       <div class="card">
         <div class="ch"><span class="no">STEP</span><h3>이렇게 진행됩니다</h3></div>
         <div class="step"><div class="n">1</div><div class="c"><b>환자 정보</b><p>이름 · 연락처만 입력하면 이력이 이어집니다.</p></div></div>
-        <div class="step"><div class="n">2</div><div class="c"><b>측정값 입력</b><p>AI PediScan＋ 리포트의 4개 항목 레벨을 옮겨 적습니다.</p></div></div>
-        <div class="step"><div class="n">3</div><div class="c"><b>육안 관찰 선택</b><p>발톱·주변 피부에서 보이는 것을 눌러서 고릅니다.</p></div></div>
-        <div class="step"><div class="n">4</div><div class="c"><b>결과 확인</b><p>분석 · 원인 · 프로토콜 · 제품 추천이 정리되어 나옵니다.</p></div></div>
+        <div class="step"><div class="n">2</div><div class="c"><b>발톱 사진</b><p>사진을 찍으면 앱이 읽습니다. AI PediScan＋를 쓰시면 연락처만으로 불러옵니다.</p></div></div>
+        <div class="step"><div class="n">3</div><div class="c"><b>결과 확인</b><p>발톱 분석 · 예상 원인 · 관리 · 제품 추천이 정리되어 나옵니다.</p></div></div>
       </div>
 
       <div class="card" id="homeRecent" style="display:none">
@@ -421,11 +437,11 @@ table.size td em{font-style:normal;font-size:10.5px;color:var(--mute);font-weigh
 
     <!-- ══════════ 분석 입력 ══════════ -->
     <section class="view" id="v-scan">
-      <div class="steps"><i class="on" id="si1"></i><i id="si2"></i><i id="si3"></i></div>
+      <div class="steps"><i class="on" id="si1"></i><i id="si2"></i></div>
 
       <!-- STEP 1 -->
       <div id="st1">
-        <div class="stlabel">STEP 1 / 3 · 환자</div>
+        <div class="stlabel">STEP 1 / 2 · 환자</div>
         <div class="card" id="againCard" style="display:none">
           <div class="ch"><h3>다시 오신 환자</h3><span class="tail">누르면 바로 채워집니다</span></div>
           <div class="chipbox" id="againChips"></div>
@@ -439,90 +455,92 @@ table.size td em{font-style:normal;font-size:10.5px;color:var(--mute);font-weigh
           </div>
           <p class="hint" id="s1Privacy" style="margin:13px 0 0;padding-top:11px;border-top:1px solid var(--line2)"></p>
         </div>
-        <button class="btn pri" onclick="toStep(2)">다음 · 측정값</button>
+        <button class="btn pri" onclick="toStep(2)">다음 · 발톱 사진</button>
       </div>
 
-      <!-- STEP 2 -->
+      <!-- STEP 2 — 사진 한 장이면 끝난다. 숫자·체크는 전부 접어 둔다. -->
       <div id="st2" style="display:none">
-        <div class="stlabel">STEP 2 / 3 · AI PediScan＋ 측정</div>
+        <div class="stlabel">STEP 2 / 2 · 발톱 사진</div>
 
         <div class="card" id="syncCard" style="display:none">
-          <div class="ch"><span class="no">연동</span><h3>측정 자동 불러오기</h3></div>
-          <p class="hint" style="margin:-4px 0 10px">연락처로 AI PediScan＋ 측정 결과를 불러옵니다.</p>
+          <div class="ch"><span class="no">연동</span><h3>AI PediScan＋에서 불러오기</h3></div>
+          <p class="hint" style="margin:-4px 0 10px">연락처만으로 측정 결과와 발 사진을 그대로 가져옵니다. 사진을 따로 찍지 않아도 됩니다.</p>
           <button class="btn ghost sm" style="width:100%" onclick="pullFromServer()">측정 결과 불러오기</button>
           <div id="syncMsg" class="hint" style="margin-top:8px"></div>
         </div>
 
         <div class="card">
-          <div class="ch"><h3>측정 레벨</h3><span class="tail">Lv 0 낮음 → 10 높음</span></div>
-          <p class="hint" style="margin:-4px 0 10px" id="msHint">리포트의 항목별 레벨을 그대로 옮겨 적습니다. 측정 전이라면 육안 판단으로 두어도 됩니다.</p>
-          <div id="msBox"></div>
-          <div style="display:flex;align-items:center;gap:12px;margin-top:14px;padding-top:13px;border-top:1px solid var(--line2)">
-            <div class="score"><b id="mScore">100</b><span class="u">/ 100 PediScore</span></div>
-            <div style="margin-left:auto"><span class="band b1" id="mBand">양호</span></div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="ch"><h3>측정 리포트</h3><span class="tail">선택 · 여러 장</span></div>
-          <p class="hint" style="margin:-4px 0 10px">태블릿의 AI PediScan＋ 리포트 화면을 저장해 넣어 두면, 방문할 때마다 나란히 비교됩니다.</p>
-          <input type="file" id="rpInput" accept="image/*" multiple style="display:none" onchange="addMedia(this,'report')">
-          <label class="ph-up" for="rpInput" style="padding:15px">
-            <svg viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/><path d="M9 12h6M9 16h4"/></svg>
-            <span>리포트 이미지 넣기</span>
-          </label>
-          <div class="rstrip" id="rpStrip" style="margin-top:10px"></div>
-        </div>
-
-        <div class="card">
-          <div class="ch"><h3>발 사진</h3><span class="tail">선택 · 여러 장</span></div>
-          <p class="hint" style="margin:-4px 0 9px">아래 <b style="color:var(--ink2)">세 컷</b>을 다 찍으면 가장 정확합니다. 한 컷만 찍어도 되며, <b style="color:var(--ink2)">찍지 않은 부위는 결과에서 다루지 않습니다.</b></p>
-          <div class="gtabs" id="cutPick" style="margin-bottom:8px">
-            <button class="chip on" data-cut="top" onclick="pickCut(this)">양발 정면 위</button>
-            <button class="chip" data-cut="close" onclick="pickCut(this)">정면 클로즈업</button>
-            <button class="chip" data-cut="sole" onclick="pickCut(this)">발바닥</button>
-          </div>
+          <div class="ch"><h3>발톱 사진</h3><span class="tail" id="nailTail">찍으면 바로 읽습니다</span></div>
+          <p class="hint" style="margin:-4px 0 10px">발톱이 잘 보이게 <b style="color:var(--ink2)">가까이</b> 찍어 주세요. 여러 장 넣어도 됩니다.</p>
           <div class="gtabs" id="footPick">
             <button class="chip on" data-foot="R" onclick="pickFoot(this)">오른발</button>
             <button class="chip" data-foot="L" onclick="pickFoot(this)">왼발</button>
           </div>
-          <input type="file" id="phInput" accept="image/*" multiple style="display:none" onchange="addMedia(this,'foot')">
-          <label class="ph-up" for="phInput" style="padding:15px">
+          <input type="file" id="phInput" accept="image/*" capture="environment" multiple style="display:none" onchange="addMedia(this,'foot')">
+          <label class="ph-up" for="phInput" style="padding:22px">
             <svg viewBox="0 0 24 24"><path d="M3 7h4l2-2h6l2 2h4v12H3z"/><circle cx="12" cy="13" r="3.5"/></svg>
-            <span id="phUpLabel">오른발 사진 촬영 · 불러오기</span>
+            <span id="phUpLabel">오른발 발톱 촬영 · 불러오기</span>
           </label>
           <div class="pgrid" id="phGrid" style="margin-top:10px"></div>
+          <div id="nailBox" style="margin-top:11px"></div>
+          <details class="more" style="margin-top:10px"><summary>어느 부위를 찍었는지 지정</summary>
+            <p class="hint" style="margin:9px 0 7px">지정하지 않으면 <b style="color:var(--ink2)">정면 클로즈업</b>으로 봅니다. 찍지 않은 부위는 결과에서 다루지 않습니다.</p>
+            <div class="gtabs" id="cutPick">
+              <button class="chip" data-cut="top" onclick="pickCut(this)">양발 정면 위</button>
+              <button class="chip on" data-cut="close" onclick="pickCut(this)">정면 클로즈업</button>
+              <button class="chip" data-cut="sole" onclick="pickCut(this)">발바닥</button>
+            </div>
+          </details>
+        </div>
+
+        <div class="card">
+          <div class="ch"><h3>안전 확인</h3><span class="tail">해당되면 눌러 주세요</span></div>
+          <p class="hint" style="margin:-4px 0 10px">사진으로는 알 수 없는 것들입니다. <b style="color:var(--ink2)">시술 전 확인이 필요한 항목</b>만 모아 두었습니다.</p>
+          <div id="obsBox"></div>
         </div>
 
         <details class="card" style="padding:0">
-          <summary style="padding:15px 16px;cursor:pointer;font-size:14.5px;font-weight:700;color:var(--navy);list-style:none;display:flex;align-items:center;gap:8px">
-            실측 사이즈 입력 <span style="margin-left:auto;font-size:11.5px;color:var(--mute);font-weight:500">선택 · 눌러서 펼치기</span>
-          </summary>
+          <summary class="csum">측정 레벨 직접 조정 <span class="cnote" id="msSumNote">사진·연동으로 채워집니다</span></summary>
           <div style="padding:0 16px 16px">
-            <p class="hint" style="margin:0 0 11px">AI PediScan＋가 잰 발 길이·너비·발등·아치 높이를 넣으면 결과에 표로 정리되고, 신발 상담에 씁니다. (mm)</p>
+            <p class="hint" style="margin:0 0 10px" id="msHint">사진을 읽거나 연동으로 불러오면 자동으로 채워집니다. 다르게 보이시면 여기서 고치세요.</p>
+            <div id="msBox"></div>
+            <div style="display:flex;align-items:center;gap:12px;margin-top:14px;padding-top:13px;border-top:1px solid var(--line2)">
+              <div class="score"><b id="mScore">100</b><span class="u">/ 100 PediScore</span></div>
+              <div style="margin-left:auto"><span class="band b1" id="mBand">양호</span></div>
+            </div>
+          </div>
+        </details>
+
+        <details class="card" style="padding:0">
+          <summary class="csum">더 자세한 관찰 <span class="cnote">선택 · 원인 추정이 정확해집니다</span></summary>
+          <div style="padding:0 16px 16px"><div id="obsMore"></div></div>
+        </details>
+
+        <details class="card" style="padding:0">
+          <summary class="csum">측정 리포트 넣기 <span class="cnote">선택</span></summary>
+          <div style="padding:0 16px 16px">
+            <p class="hint" style="margin:0 0 10px">AI PediScan＋ 리포트 화면을 저장해 넣어 두면 방문할 때마다 나란히 비교됩니다.</p>
+            <input type="file" id="rpInput" accept="image/*" multiple style="display:none" onchange="addMedia(this,'report')">
+            <label class="ph-up" for="rpInput" style="padding:15px">
+              <svg viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/><path d="M9 12h6M9 16h4"/></svg>
+              <span>리포트 이미지 넣기</span>
+            </label>
+            <div class="rstrip" id="rpStrip" style="margin-top:10px"></div>
+          </div>
+        </details>
+
+        <details class="card" style="padding:0">
+          <summary class="csum">실측 사이즈 · 메모 <span class="cnote">선택</span></summary>
+          <div style="padding:0 16px 16px">
+            <p class="hint" style="margin:0 0 11px">발 길이·너비·발등·아치 높이(mm). 신발 상담에 씁니다.</p>
             <div id="sizeBox"></div>
+            <div class="gl">메모</div>
+            <textarea class="in" id="pNote" placeholder="통증 정도, 경과 기간, 이전 시술 이력 등"></textarea>
           </div>
         </details>
 
         <div class="row2">
           <button class="btn ghost" onclick="toStep(1)">이전</button>
-          <button class="btn pri" onclick="toStep(3)">다음 · 관찰</button>
-        </div>
-      </div>
-
-      <!-- STEP 3 -->
-      <div id="st3" style="display:none">
-        <div class="stlabel">STEP 3 / 3 · 육안 관찰</div>
-        <div class="card">
-          <p class="hint" style="margin:0 0 4px">보이는 것을 모두 선택하세요. 많이 고를수록 원인 추정이 정확해집니다.</p>
-          <div id="obsBox"></div>
-        </div>
-        <div class="card">
-          <div class="ch"><h3>메모</h3><span class="tail">선택</span></div>
-          <textarea class="in" id="pNote" placeholder="문진 내용, 통증 정도, 경과 기간, 이전 시술 이력 등"></textarea>
-        </div>
-        <div class="row2">
-          <button class="btn ghost" onclick="toStep(2)">이전</button>
           <button class="btn gold" onclick="runAnalyze()">분석 결과 보기</button>
         </div>
       </div>
@@ -880,7 +898,7 @@ const CAUSES=[
 const has=(o,v)=>o.indexOf(v)>=0;
 
 /* ── 상태 ── */
-let CFG={shop:'',user:'',wire:'0.012 · 0.014 · 0.016',api:'',key:'',aiApi:'',aiKey:'',pemail:'',care:null,prod:null}, RECORDS=[], cur={}, step=1, curFoot='R', curCut='top';
+let CFG={shop:'',user:'',wire:'0.012 · 0.014 · 0.016',api:'',key:'',aiApi:'',aiKey:'',pemail:'',care:null,prod:null}, RECORDS=[], cur={}, step=1, curFoot='R', curCut='close';
 /* 촬영 컷 3종(스펙 5항) — 전부 찍으면 종합, 일부만 찍으면 찍힌 부위만 다룬다 */
 const CUTS=[['top','양발 정면 위','두 발을 나란히 놓고 위에서'],['close','정면 클로즈업','발톱 상태가 보이게 가까이'],['sole','발바닥','발바닥 전체가 보이게']];
 const cutName=k=>(CUTS.find(c=>c[0]===k)||[,'사진'])[1];
@@ -1313,6 +1331,8 @@ function startScan(){
   cur={site:'',ms:{cnl:0,una:0,cls:0,cot:0},obs:[],sizes:{R:{},L:{}}}; pendMedia=[]; step=1; curFoot='R';
   $('#pName').value='';$('#pPhone').value='';$('#pNote').value='';
   $('#prevHint').style.display='none'; $('#syncMsg').textContent='';
+  $('#nailBox').innerHTML=''; $('#nailTail').textContent='찍으면 바로 읽습니다';
+  $('#msSumNote').textContent='사진·연동으로 채워집니다';
   buildForm(); renderPend(); renderAgain(); toStep(1); go('scan');
 }
 function buildForm(){
@@ -1323,9 +1343,12 @@ function buildForm(){
       <input type="range" min="0" max="10" value="0" id="r-${o.k}" oninput="onMs('${o.k}')">
       <div class="lv"><span>0 · 낮음</span><span>5</span><span>10 · 높음</span></div>
     </div>`).join('');
-  $('#obsBox').innerHTML=OBS.map(g=>`
-    <div class="gl">${g.g}</div>
-    <div class="chipbox">${g.items.map(i=>`<button class="chip${g.risk?' risk':''}" data-v="${i.v}" onclick="pickObs(this)">${i.v}</button>`).join('')}</div>`).join('');
+  /* 안전 확인(위험신호·기저질환)만 앞에 두고, 나머지 관찰은 접어 둔다 —
+     사진으로 알 수 있는 건 사진이 판단하고, 사람은 사진에 안 나오는 것만 고른다 */
+  const grp=g=>`<div class="gl">${g.g}</div>
+    <div class="chipbox">${g.items.map(i=>`<button class="chip obschip${g.risk?' risk':''}" data-v="${i.v}" onclick="pickObs(this)">${i.v}</button>`).join('')}</div>`;
+  $('#obsBox').innerHTML=OBS.filter(g=>g.risk).map(g=>grp(Object.assign({},g,{g:'시술 전 확인'}))).join('');
+  $('#obsMore').innerHTML=OBS.filter(g=>!g.risk).map(grp).join('');
   $('#sizeBox').innerHTML=SIZE_ROWS.map(([lab,k])=>`
     <div style="display:flex;align-items:center;gap:9px;margin-bottom:9px">
       <span style="flex:1;font-size:12.5px;color:var(--ink2)">${lab}</span>
@@ -1388,7 +1411,7 @@ function addMedia(inp,kind){
       pendMedia.push({id:'m'+Date.now()+'_'+Math.random().toString(36).slice(2,7),kind,foot:kind==='foot'?curFoot:null,
                       cut:kind==='foot'?curCut:null,
                       label:kind==='foot'?((curFoot==='R'?'오른발':'왼발')+' · '+cutName(curCut)):'리포트',url});
-      if(++done===files.length){renderPend();toast(files.length+'장 추가했습니다');}
+      if(++done===files.length){renderPend();toast(files.length+'장 추가했습니다');if(kind==='foot')nailRead();}
     });
   });
   inp.value='';
@@ -1411,6 +1434,64 @@ function renderPend(){
 function dropPend(id){pendMedia=pendMedia.filter(m=>m.id!==id);renderPend();}
 
 /* 연동 어댑터 — 주소·키가 있을 때만 동작 */
+/* ═══════════════════════════════════════════════════════════
+   발톱 사진 판독 — 베카앱 사진분석 로직(VISION_SYSTEM·6분류)을 따른다.
+   서버 키가 없거나 실패하면 조용히 넘어가고, 화면은 그대로 쓸 수 있다.
+   ═══════════════════════════════════════════════════════════ */
+const NAIL_API='https://pediscan-clinic.vercel.app/api/nail';
+const nailUrl=()=>(location.protocol==='http:'||location.protocol==='https:')?'/api/nail':NAIL_API;
+let nailBusy=false;
+
+function nailShow(cls,html){ const b=$('#nailBox'); if(b)b.innerHTML=`<div class="read ${cls}">${html}</div>`; }
+
+async function nailRead(){
+  const box=$('#nailBox'); if(!box)return;
+  const shots=pendMedia.filter(m=>m.kind==='foot');
+  if(!shots.length){box.innerHTML='';return;}
+  if(nailBusy)return;
+  if(cur.src==='device'){ /* 기기 실측이 이미 들어와 있으면 사진 추정으로 덮지 않는다 */
+    nailShow('on','<b>AI PediScan＋ 실측값을 쓰고 있습니다</b><p>사진은 기록으로 함께 저장됩니다.</p>');return;
+  }
+  nailBusy=true;
+  $('#nailTail').textContent='읽는 중…';
+  nailShow('','<b><span class="spin"></span>발톱 사진을 읽고 있습니다</b><p>보통 2초 안에 끝납니다.</p>');
+  try{
+    const img=shots[shots.length-1].url;
+    const ctrl=new AbortController(), t=setTimeout(()=>ctrl.abort(),15000);
+    const r=await fetch(nailUrl(),{method:'POST',signal:ctrl.signal,
+      headers:{'Content-Type':'application/json'},body:JSON.stringify({image:img})});
+    clearTimeout(t);
+    const d=await r.json().catch(()=>null);
+    if(!r.ok||!d) throw new Error((d&&d.message)||('응답 '+r.status));
+    if(d.enabled===false){
+      nailShow('err','<b>사진 판독이 아직 켜져 있지 않습니다</b><p>아래 <b>측정 레벨 직접 조정</b>을 펼쳐 넣거나, AI PediScan＋ 연동을 쓰시면 됩니다.</p>');
+      $('#nailTail').textContent='직접 입력';
+      return;
+    }
+    applyNail(d);
+  }catch(e){
+    nailShow('err','<b>사진을 읽지 못했습니다</b><p>'+esc(e.message||'')+' — 아래 <b>측정 레벨 직접 조정</b>에서 넣으셔도 됩니다.</p>');
+    $('#nailTail').textContent='직접 입력';
+  }finally{ nailBusy=false; }
+}
+
+function applyNail(d){
+  cur.src='photo';                       /* 기기 실측과 구분한다 — 결과의 값 출처에 그대로 나간다 */
+  cur.nail={observation:d.observation||'',category:d.category||'unclear',risk:!!d.risk};
+  const lv=d.levels||{};
+  META.forEach(o=>{ if(lv[o.k]!=null){const el=$('#r-'+o.k); if(el){el.value=Math.max(0,Math.min(10,Math.round(lv[o.k])));onMs(o.k);} } });
+  if(Array.isArray(d.obs)&&d.obs.length) markObs(d.obs);
+  const chips=META.filter(o=>lv[o.k]!=null).map(o=>`<span>${o.sub} ${Math.round(lv[o.k])}</span>`).join('');
+  nailShow('on',
+    `<b>사진 판독 결과<span class="est">추정</span></b>
+     <p>${esc(d.observation||'')}</p>
+     ${chips?`<div class="lvs">${chips}</div>`:''}
+     <p style="margin-top:9px;font-size:11.5px;color:var(--mute);word-break:keep-all">사진으로 본 추정입니다. 다르게 보이시면 아래에서 고치실 수 있습니다.</p>`);
+  $('#nailTail').textContent='읽었습니다';
+  $('#msSumNote').textContent='사진 판독으로 채워짐';
+  if(d.risk) toast('주의가 필요한 소견이 보입니다 — 안전 확인을 살펴 주세요');
+}
+
 async function pullFromServer(){
   const ph=$('#pPhone').value.replace(/[^0-9]/g,'');
   const msg=$('#syncMsg');
@@ -1436,6 +1517,9 @@ async function pullFromServer(){
     const m=Array.isArray(d)?d[0]:(d.measurements?d.measurements[0]:d);
     if(!m||!m.levels)throw new Error((d&&d.message)||'측정 결과가 없습니다');
     applyMeasure(m);
+    $('#msSumNote').textContent='AI PediScan＋ 실측값';
+    nailShow('on','<b>AI PediScan＋ 실측값을 불러왔습니다</b><p>사진 판독보다 정확합니다. 아래 <b>측정 레벨 직접 조정</b>에서 확인하실 수 있습니다.</p>');
+    $('#nailTail').textContent='실측 반영';
     const who=m.customer?esc(m.customer)+' 님 · ':'';
     msg.innerHTML='<b style="color:var(--ok)">불러왔습니다.</b> '+who+(m.measured_at?esc(String(m.measured_at).slice(0,10))+' 측정. ':'')+'필요하면 손으로 고칠 수 있습니다.';
   }catch(e){
@@ -1459,7 +1543,14 @@ function applyMeasure(m){
   renderPend();
 }
 function pickSite(b){$$('#siteChips .chip').forEach(c=>c.classList.remove('on'));b.classList.add('on');cur.site=b.dataset.site;}
-function pickObs(b){b.classList.toggle('on');cur.obs=$$('#obsBox .chip.on').map(c=>c.dataset.v);}
+function pickObs(b){b.classList.toggle('on');syncObs();}
+function syncObs(){cur.obs=$$('.obschip.on').map(c=>c.dataset.v);}
+/* AI 판독·연동이 고른 관찰을 화면 칩에도 켜 준다 */
+function markObs(list){
+  const set=new Set(list||[]);
+  $$('.obschip').forEach(c=>{ if(set.has(c.dataset.v)) c.classList.add('on'); });
+  syncObs();
+}
 function onMs(k){
   const v=+$('#r-'+k).value; cur.ms[k]=v; $('#d-'+k).textContent='Lv '+v;
   const s=score(cur.ms); $('#mScore').textContent=s;
@@ -1475,7 +1566,8 @@ const lvTxt =(o,lv)=>o.txt[lvIdx(lv)];
 const lvUTxt=(o,lv)=>o.utxt[lvIdx(lv)];
 
 function toStep(n){
-  step=n; [1,2,3].forEach(i=>{$('#st'+i).style.display=i===n?'block':'none';$('#si'+i).classList.toggle('on',i<=n);});
+  if(n>2)n=2;
+  step=n; [1,2].forEach(i=>{$('#st'+i).style.display=i===n?'block':'none';$('#si'+i).classList.toggle('on',i<=n);});
   $('#scroll').scrollTop=0;
 }
 
@@ -1602,7 +1694,7 @@ async function runAnalyze(){
     site:cur.site, ms:Object.assign({},cur.ms), obs:cur.obs.slice(),
     sizes:hasSize?{R:cur.sizes.R,L:cur.sizes.L}:null,
     note:$('#pNote').value.trim(), shop:CFG.shop, user:CFG.user,
-    src:cur.src||'manual', measuredAt:cur.measuredAt||null,
+    src:cur.src||'manual', measuredAt:cur.measuredAt||null, nail:cur.nail||null,
     cuts:[...new Set(pendMedia.filter(m=>m.kind==='foot'&&m.cut).map(m=>m.cut))],
     nMedia:pendMedia.length
   };
@@ -1732,6 +1824,14 @@ async function showResult(rec){
     ${rec.obs.length?`<div class="hint" style="margin-top:11px;padding-top:10px;border-top:1px solid var(--line2)"><b style="color:var(--ink2)">선택한 관찰</b> · ${rec.obs.map(esc).join(' · ')}</div>`:''}
   </div>`);
 
+  /* 3-2 사진 판독 소견 — 사진으로 본 것이라는 점을 화면에 남긴다 */
+  if(rec.nail&&rec.nail.observation){
+    H.push(`<div class="card"><div class="ch"><span class="no">${no()}</span><h3>사진 판독 소견</h3><span class="tail">추정 · 확진 아님</span></div>
+      <p class="sub" style="margin:0">${esc(rec.nail.observation)}</p>
+      <div class="hint" style="margin-top:10px;padding-top:9px;border-top:1px solid var(--line2)">발톱 사진을 근거로 한 <b style="color:var(--ink2)">추정</b>입니다. 질환의 확진과 시술 적합 여부는 의료진이 판단합니다.</div>
+    </div>`);
+  }
+
   /* 4 예상 원인 */
   H.push(`<div class="card"><div class="ch"><span class="no">${no()}</span><h3>예상 원인</h3><span class="tail">참고용 추정</span></div>
     ${o.ai&&o.ai.likely_cause?`<div class="cause" style="border-color:var(--gold);background:#FFFDF7"><h4>AI 분석 소견<em style="background:#FAF3E4;color:var(--gold-d)">참고</em></h4><p>${esc(o.ai.likely_cause)}</p></div>`:''}
@@ -1792,11 +1892,13 @@ async function showResult(rec){
   {
     const got=(rec.cuts||[]);
     const miss=CUTS.filter(c=>got.indexOf(c[0])<0);
-    const isDev=rec.src==='device';
+    const isDev=rec.src==='device', isPhoto=rec.src==='photo';
     H.push(`<div class="card"><div class="ch"><span class="no">${no()}</span><h3>이 결과가 다룬 범위</h3></div>
       <div class="kvrow"><b>값 출처</b><span>${isDev
         ? 'AI PediScan＋ <b>실측</b>'+(rec.measuredAt?' · '+esc(String(rec.measuredAt).slice(0,10)):'')
-        : '의료진 <b>관찰 기록</b> · 기기 실측값 아님'}</span></div>
+        : isPhoto
+          ? '발톱 <b>사진 판독</b> · 추정값이며 기기 실측값 아님'
+          : '의료진 <b>관찰 기록</b> · 기기 실측값 아님'}</span></div>
       <div class="kvrow"><b>촬영</b><span>${got.length?got.map(k=>esc(cutName(k))).join(' · '):'발 사진 없음'}</span></div>
       ${miss.length?`<p class="hint" style="margin:9px 0 0">촬영하지 않은 <b style="color:var(--ink2)">${miss.map(c=>esc(c[1])).join(' · ')}</b> 부위는 이 결과에서 다루지 않았습니다. 그 부위 판단이 필요하면 해당 컷을 촬영해 다시 분석해 주세요.</p>`:''}
     </div>`);
